@@ -14,50 +14,48 @@ struct FifoTest : public ::testing::Test {
 };
 
 TEST_F(FifoTest, WriteUntillFullAndReadUntilEmpty) {
-  std::vector<void *> apData{};
+  std::vector<union DataPack> apData{};
   for (uint32_t i = 0; i < FFPF_FIFO_SIZE; i++) {
-    auto v = malloc(100);
+    union DataPack v;
+    v.i.value = i;
     apData.push_back(v);
-    auto result = ffpfWriteDataToFifo(&fifo_, v);
+    auto result = ffpfWriteDataToFifo(&fifo_, &v);
     ASSERT_TRUE(result);
   }
   auto fullResult = ffpfWriteDataToFifo(&fifo_, nullptr);
   ASSERT_FALSE(fullResult);
 
-  void const *pData;
+  union DataPack pData;
   for (uint32_t i = 0; i < FFPF_FIFO_SIZE; i++) {
-    auto v = malloc(100);
-    apData.push_back(v);
     auto result = ffpfReadDataFromFifo(&fifo_, &pData);
     ASSERT_TRUE(result);
-    ASSERT_EQ(pData, apData[i]);
+    ASSERT_EQ(pData.i.value, apData[i].i.value);
   }
   auto emptyResult = ffpfReadDataFromFifo(&fifo_, &pData);
   ASSERT_FALSE(emptyResult);
-
-  for (auto pData : apData) {
-    free(pData);
-  }
 }
 
 static void testParalled(FifoTest *framework, std::size_t size, bool delayWriter, bool delayReader) {
-  std::vector<void *> apWrittenData{};
-  std::vector<void const *> apReadedData{};
+  std::vector<union DataPack> apWrittenData{};
+  std::vector<union DataPack> apReadedData{};
   std::thread writeThread([framework, size, delayWriter, &apWrittenData] {
+    uint32_t i = 0;
     while (apWrittenData.size() < size) {
-      auto v = malloc(1);
+      union DataPack v;
+      v.i.value = i;
+      i++;
       bool result = false;
       while (!result) {
         if (delayWriter) {
           std::this_thread::sleep_for(std::chrono::microseconds(10));
         }
-        result = ffpfWriteDataToFifo(&framework->fifo_, v);
+        result = ffpfWriteDataToFifo(&framework->fifo_, &v);
       }
       apWrittenData.push_back(v);
     }
   });
   std::thread readThread([framework, size, delayReader, &apReadedData] {
-    void const *pData;
+    union DataPack pData;
     while (apReadedData.size() < size) {
       bool result = false;
       while (!result) {
@@ -74,10 +72,7 @@ static void testParalled(FifoTest *framework, std::size_t size, bool delayWriter
   readThread.join();
 
   for (std::size_t i = 0; i < apReadedData.size(); i++) {
-    ASSERT_EQ(apReadedData[i], apWrittenData[i]);
-  }
-  for (auto pData : apWrittenData) {
-    free(pData);
+    ASSERT_EQ(apReadedData[i].i.value, apWrittenData[i].i.value);
   }
 }
 

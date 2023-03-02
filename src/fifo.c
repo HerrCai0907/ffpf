@@ -7,13 +7,13 @@ void ffpfInitFifo(struct Fifo *const pFifo, struct FifoReader *const pReader, st
   pFifo->pWriter = pWriter;
 }
 
-bool ffpfWriteDataToFifo(struct Fifo *const pFifo, void const *const pWrittenData) {
+bool ffpfWriteDataToFifo(struct Fifo *const pFifo, const union DataPack *const pWrittenData) {
   bool result;
   struct FifoWriter *const pWriter = pFifo->pWriter;
   struct FifoReader const *const pReader = pFifo->pReader;
   memoryfence;
   if ((pWriter->writerIndex - pReader->readerIndex) < FFPF_FIFO_SIZE) {
-    pFifo->apData[pWriter->writerIndex % FFPF_FIFO_SIZE] = pWrittenData;
+    pFifo->aData[pWriter->writerIndex % FFPF_FIFO_SIZE] = *pWrittenData;
     memoryfence;
     pWriter->writerIndex++;
     result = true;
@@ -24,13 +24,13 @@ bool ffpfWriteDataToFifo(struct Fifo *const pFifo, void const *const pWrittenDat
   return result;
 }
 
-bool ffpfReadDataFromFifo(struct Fifo *const pFifo, void const **const ppReadedData) {
+bool ffpfReadDataFromFifo(struct Fifo const *const pFifo, union DataPack *const pReadedData) {
   bool result;
   struct FifoWriter const *const pWriter = pFifo->pWriter;
   struct FifoReader *const pReader = pFifo->pReader;
   memoryfence;
   if ((pWriter->writerIndex - pReader->readerIndex) > 0U) {
-    *ppReadedData = pFifo->apData[pReader->readerIndex % FFPF_FIFO_SIZE];
+    *pReadedData = pFifo->aData[pReader->readerIndex % FFPF_FIFO_SIZE];
     memoryfence;
     pReader->readerIndex++;
     result = true;

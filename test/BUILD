@@ -1,5 +1,5 @@
 cc_test(
-    name = "test",
+    name = "ut",
     size = "small",
     srcs = glob(["*.cpp"]),
     deps = [
