@@ -9,6 +9,8 @@ struct FifoTest : public ::testing::Test {
   FifoTest() { ffpfInitFifo(&fifo_, &reader_, &writer_); }
 
   struct Fifo fifo_;
+
+private:
   struct FifoReader reader_;
   struct FifoWriter writer_;
 };

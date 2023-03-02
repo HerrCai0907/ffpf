@@ -1,13 +1,14 @@
 #include "fifo.h"
 
-void ffpfInitFifo(struct Fifo *const pFifo, struct FifoReader *const pReader, struct FifoWriter *const pWriter) {
+void ffpfInitFifo(struct Fifo *pFifo, struct FifoReader *pReader, struct FifoWriter *pWriter) {
   pReader->readerIndex = 0;
   pWriter->writerIndex = 0;
   pFifo->pReader = pReader;
   pFifo->pWriter = pWriter;
 }
 
-bool ffpfWriteDataToFifo(struct Fifo *const pFifo, const union DataPack *const pWrittenData) {
+// cppcheck-suppress misra-c2012-19.2 // variant record
+bool ffpfWriteDataToFifo(struct Fifo *pFifo, const union DataPack *pWrittenData) {
   bool result;
   struct FifoWriter *const pWriter = pFifo->pWriter;
   struct FifoReader const *const pReader = pFifo->pReader;
@@ -24,7 +25,8 @@ bool ffpfWriteDataToFifo(struct Fifo *const pFifo, const union DataPack *const p
   return result;
 }
 
-bool ffpfReadDataFromFifo(struct Fifo const *const pFifo, union DataPack *const pReadedData) {
+// cppcheck-suppress misra-c2012-19.2 // variant record
+bool ffpfReadDataFromFifo(struct Fifo const *pFifo, union DataPack *pReadedData) {
   bool result;
   struct FifoWriter const *const pWriter = pFifo->pWriter;
   struct FifoReader *const pReader = pFifo->pReader;
